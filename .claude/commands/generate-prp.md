@@ -1,54 +1,66 @@
-# Create PRP
+# Create PRP – EARS-aligned Edition
 
 ## Feature file: $ARGUMENTS
+Generate a complete PRP for the requested feature **using the EARS template to express every requirement**.  
+Read the feature file first; understand what must be built, how the examples guide you, and any other nuances.
 
-Generate a complete PRP for general feature implementation with thorough research. Ensure context is passed to the AI agent to enable self-validation and iterative refinement. Read the feature file first to understand what needs to be created, how the examples provided help, and any other considerations.
+The downstream AI agent only sees what you append to this PRP plus the training data.  
+Assume it has repo access and the same knowledge cut-off as you, so every insight you dig up **must** be included or explicitly linked (URLs).
 
-The AI agent only gets the context you are appending to the PRP and training data. Assuma the AI agent has access to the codebase and the same knowledge cutoff as you, so its important that your research findings are included or referenced in the PRP. The Agent has Websearch capabilities, so pass urls to documentation and examples.
+---
 
 ## Research Process
 
-1. **Codebase Analysis**
-   - Search for similar features/patterns in the codebase
-   - Identify files to reference in PRP
-   - Note existing conventions to follow
-   - Check test patterns for validation approach
+1. **Codebase Analysis**  
+   - Scan for similar features / patterns.  
+   - Record file paths and snippets you will cite in the PRP.  
+   - Note conventions (naming, error handling, tests).
 
-2. **External Research**
-   - Search for similar features/patterns online
-   - Library documentation (include specific URLs)
-   - Implementation examples (GitHub/StackOverflow/blogs)
-   - Best practices and common pitfalls
+2. **External Research**  
+   - Find comparable implementations, library docs, best-practice write-ups.  
+   - Capture canonical URLs (RFC-like links, GitHub gists, blog posts, Stack Overflow answers).  
+   - List pitfalls and version quirks.
 
-3. **User Clarification** (if needed)
-   - Specific patterns to mirror and where to find them?
-   - Integration requirements and where to find them?
+3. **User Clarification** *(only if necessary)*  
+   - Ask about missing triggers, states, or optional behaviours that block writing unambiguous EARS requirements.
 
-## PRP Generation
+---
 
-Using PRPs/templates/prp_base.md as template:
+## PRP Generation  *(use `PRPs/templates/prp_base.md` as the scaffold)*
 
-### Critical Context to Include and pass to the AI agent as part of the PRP
-- **Documentation**: URLs with specific sections
-- **Code Examples**: Real snippets from codebase
-- **Gotchas**: Library quirks, version issues
-- **Patterns**: Existing approaches to follow
+### 1 – EARS Requirements
+For **each** discrete behaviour, supply an EARS-formatted requirement and label its pattern:
 
-### Implementation Blueprint
-- Start with pseudocode showing approach
-- Reference real files for patterns
-- Include error handling strategy
-- list tasks to be completed to fullfill the PRP in the order they should be completed
+| ID       | Pattern           | Requirement (EARS syntax)                                        | Rationale / Linkbacks |
+|----------|-------------------|------------------------------------------------------------------|-----------------------|
+| REQ-U-1  | Ubiquitous        | `<SystemName> shall <system-response>.`                          | (always true)         |
+| REQ-E-1  | Event-Driven      | `When <trigger>, the <SystemName> shall <response>.`             | …                     |
+| REQ-UWB-1| Unwanted Behaviour| `If <undesired condition>, the <SystemName> shall <response>.`   | …                     |
+| REQ-S-1  | State-Driven      | `While <state>, the <SystemName> shall <response>.`              | …                     |
+| REQ-O-1  | Optional          | `Where <feature> is present, the <SystemName> shall <response>.` | …                     |
+| REQ-C-1  | Complex           | `When <trigger> and while <state>, if <condition> …`             | …                     |
 
-### Validation Gates (Must be Executable) eg for python
+*Rewrite or split any vague requirement from the feature file into clear EARS form before continuing.*
+
+### 2 – Critical Context for the AI Agent
+- **Documentation URLs** – deep links to API sections, standards.  
+- **Code Examples** – real snippets (with path and line refs).  
+- **Gotchas** – version incompatibilities, library quirks.  
+- **Patterns** – existing repo approaches to mimic or extend.
+
+### 3 – Implementation Blueprint
+1. Pseudocode / algorithmic outline.  
+2. File-by-file plan referencing existing modules.  
+3. Error-handling & logging strategy.  
+4. **Task List** – ordered, check-box style.
+
+### 4 – Validation Gates *(must be executable)*
 ```bash
-# Syntax/Style
+# Syntax & style
 ruff check --fix && mypy .
 
-# Unit Tests
+# Unit tests
 uv run pytest tests/ -v
-
-```
 
 *** CRITICAL AFTER YOU ARE DONE RESEARCHING AND EXPLORING THE CODEBASE BEFORE YOU START WRITING THE PRP ***
 
@@ -58,12 +70,13 @@ uv run pytest tests/ -v
 Save as: `PRPs/{feature-name}.md`
 
 ## Quality Checklist
-- [ ] All necessary context included
-- [ ] Validation gates are executable by AI
-- [ ] References existing patterns
-- [ ] Clear implementation path
-- [ ] Error handling documented
+- [ ] All EARS requirements present, labelled, and unambiguous.
+- [ ] Necessary context (docs, snippets, gotchas) included.
+- [ ] Validation gates run cleanly from repo root.
+- [ ] References to existing patterns / conventions.
+- [ ] Clear, linear implementation path.
+- [ ] Error handling documented.
 
 Score the PRP on a scale of 1-10 (confidence level to succeed in one-pass implementation using claude codes)
 
-Remember: The goal is one-pass implementation success through comprehensive context.
+Remember: The goal is one-pass implementation success through comprehensive context. Think first, write second.
