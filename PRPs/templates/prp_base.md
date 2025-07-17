@@ -1,51 +1,67 @@
-name: "Base PRP Template v2 - Context-Rich with Validation Loops"
+name: "Base PRP Template v3 – Context-Rich, EARS-Aligned, with Validation Loops"
 description: |
 
 ## Purpose
-Template optimized for AI agents to implement features with sufficient context and self-validation capabilities to achieve working code through iterative refinement.
+A template optimised for AI agents to ship features in one pass by supplying:
+* Comprehensive context (docs, examples, code patterns, pitfalls)
+* EARS-formatted requirements for clarity and testability
+* Executable validation loops so the agent can self-correct
 
 ## Core Principles
-1. **Context is King**: Include ALL necessary documentation, examples, and caveats
-2. **Validation Loops**: Provide executable tests/lints the AI can run and fix
-3. **Information Dense**: Use keywords and patterns from the codebase
-4. **Progressive Success**: Start simple, validate, then enhance
-5. **Global rules**: Be sure to follow all rules in CLAUDE.md
+1. Context is King – include *all* docs, code refs, and caveats.
+2. Unambiguous Requirements – write every requirement with the **EARS** pattern set.
+3. Validation Loops – provide tests & lints the AI can run and fix.
+4. Information Density – surface keywords and patterns from the codebase.
+5. Progressive Success – deliver an MVP, validate, then enhance.
+6. Global Rules – follow every rule in CLAUDE.md.
 
 ---
 
 ## Goal
-[What needs to be built - be specific about the end state and desires]
+[Describe precisely what must exist when “done.”]
 
 ## Why
-- [Business value and user impact]
-- [Integration with existing features]
-- [Problems this solves and for whom]
+- [Business value & user impact]  
+- [Integration points / dependencies]  
+- [Problems solved and beneficiaries]
 
 ## What
-[User-visible behavior and technical requirements]
+Describe user-visible behaviour **and** technical requirements.
+
+### EARS Requirements Table
+List *every* discrete behaviour here; one row per requirement.
+
+| ID        | Pattern (EARS)     | Requirement (EARS syntax)                                                                  | Rationale / Linkbacks |
+|-----------|--------------------|--------------------------------------------------------------------------------------------|-----------------------|
+| REQ-U-1   | Ubiquitous         | `<SystemName> shall <response>.`                                                           | …                     |
+| REQ-E-1   | Event-Driven       | `When <trigger>, the <SystemName> shall <response>.`                                       | …                     |
+| REQ-UWB-1 | Unwanted Behaviour | `If <undesired condition>, the <SystemName> shall <response>.`                             | …                     |
+| REQ-S-1   | State-Driven       | `While <state>, the <SystemName> shall <response>.`                                        | …                     |
+| REQ-O-1   | Optional           | `Where <feature> is present, the <SystemName> shall <response>.`                           | …                     |
+| REQ-C-1   | Complex            | `When <trigger> and while <state>, if <condition> then the <SystemName> shall <response>.` | …                     |
+
+*(Rewrite vague statements into clear EARS form before continuing.)*
 
 ### Success Criteria
-- [ ] [Specific measurable outcomes]
+- [ ] Measurable outcome 1  
+- [ ] Measurable outcome 2  
+
+---
 
 ## All Needed Context
 
-### Documentation & References (list all context needed to implement the feature)
+### Documentation & References
 ```yaml
-# MUST READ - Include these in your context window
-- url: [Official API docs URL]
-  why: [Specific sections/methods you'll need]
-  
-- file: [path/to/example.py]
-  why: [Pattern to follow, gotchas to avoid]
-  
-- doc: [Library documentation URL] 
-  section: [Specific section about common pitfalls]
-  critical: [Key insight that prevents common errors]
+# Include **every** resource the AI must ingest
+- url: https://api.example.com/docs
+  why: Core endpoints used in REQ-E-1
 
-- docfile: [PRPs/ai_docs/file.md]
-  why: [docs that the user has pasted in to the project]
+- file: src/example_usage.py
+  why: Shows pattern for async error handling (mirrors REQ-UWB-1)
 
-```
+- doc: https://pydantic.dev/usage/types
+  section: "Custom data types"
+  critical: Explains serialization caveat that often breaks tests
 
 ### Current Codebase tree (run `tree` in the root of the project) to get an overview of the codebase
 ```bash
@@ -71,11 +87,10 @@ Template optimized for AI agents to implement features with sufficient context a
 
 Create the core data models, we ensure type safety and consistency.
 ```python
-Examples: 
- - orm models
- - pydantic models
- - pydantic schemas
- - pydantic validators
+# Outline only – keep code light; focus on shape & relationships
+class ResearchResult(BaseModel):
+    query: str
+    top_hits: list[SearchHit]
 
 ```
 
@@ -83,61 +98,38 @@ Examples:
 
 ```yaml
 Task 1:
-MODIFY src/existing_module.py:
-  - FIND pattern: "class OldImplementation"
-  - INJECT after line containing "def __init__"
-  - PRESERVE existing method signatures
+  MODIFY src/core/router.py
+  - INSERT new route after pattern "router = APIRouter()"
+  - FOLLOW pattern from src/core/health.py
 
-CREATE src/new_feature.py:
-  - MIRROR pattern from: src/similar_feature.py
-  - MODIFY class name and core logic
-  - KEEP error handling pattern identical
-
-...(...)
-
-Task N:
+Task 2:
+  CREATE src/agents/research_agent.py
+  - MIRROR agent scaffold in src/agents/base_agent.py
+  - IMPLEMENT search() fulfilling REQ-E-1
 ...
-
 ```
 
 
 ### Per task pseudocode as needed added to each task
 ```python
-
-# Task 1
-# Pseudocode with CRITICAL details dont write entire code
-async def new_feature(param: str) -> Result:
-    # PATTERN: Always validate input first (see src/validators.py)
-    validated = validate_input(param)  # raises ValidationError
-    
-    # GOTCHA: This library requires connection pooling
-    async with get_connection() as conn:  # see src/db/pool.py
-        # PATTERN: Use existing retry decorator
-        @retry(attempts=3, backoff=exponential)
-        async def _inner():
-            # CRITICAL: API returns 429 if >10 req/sec
-            await rate_limiter.acquire()
-            return await external_api.call(validated)
-        
-        result = await _inner()
-    
-    # PATTERN: Standardized response format
-    return format_response(result)  # see src/utils/responses.py
+# Task 2 – research_agent.search
+async def search(self, query: str) -> ResearchResult:
+    # VALIDATE input (<= 256 chars)  # REQ-UWB-1
+    # CALL brave_api.query(query)    # asynchronous
+    # HANDLE HTTP errors / rate-limits
+    # RETURN ResearchResult(model)
 ```
 
 ### Integration Points
 ```yaml
 DATABASE:
-  - migration: "Add column 'feature_enabled' to users table"
-  - index: "CREATE INDEX idx_feature_lookup ON users(feature_id)"
-  
+  - migration: "ALTER TABLE users ADD COLUMN feature_enabled BOOLEAN DEFAULT FALSE"
+
 CONFIG:
-  - add to: config/settings.py
-  - pattern: "FEATURE_TIMEOUT = int(os.getenv('FEATURE_TIMEOUT', '30'))"
-  
+  - settings.py → FEATURE_TIMEOUT = int(os.getenv("FEATURE_TIMEOUT", "30"))
+
 ROUTES:
-  - add to: src/api/routes.py  
-  - pattern: "router.include_router(feature_router, prefix='/feature')"
+  - src/api/routes.py → include_router(research_router, prefix="/research")
 ```
 
 ## Validation Loop
@@ -153,23 +145,11 @@ mypy src/new_feature.py              # Type checking
 
 ### Level 2: Unit Tests each new feature/file/function use existing test patterns
 ```python
-# CREATE test_new_feature.py with these test cases:
-def test_happy_path():
-    """Basic functionality works"""
-    result = new_feature("valid_input")
-    assert result.status == "success"
+def test_event_search_happy_path():  # REQ-E-1
+    ...
 
-def test_validation_error():
-    """Invalid input raises ValidationError"""
-    with pytest.raises(ValidationError):
-        new_feature("")
-
-def test_external_api_timeout():
-    """Handles timeouts gracefully"""
-    with mock.patch('external_api.call', side_effect=TimeoutError):
-        result = new_feature("valid")
-        assert result.status == "error"
-        assert "timeout" in result.message
+def test_unwanted_beh_rate_limit():  # REQ-UWB-1
+    ...
 ```
 
 ```bash
@@ -193,13 +173,14 @@ curl -X POST http://localhost:8000/feature \
 ```
 
 ## Final validation Checklist
+- [ ] All EARS requirements satisfied & traceable in code/tests
 - [ ] All tests pass: `uv run pytest tests/ -v`
 - [ ] No linting errors: `uv run ruff check src/`
 - [ ] No type errors: `uv run mypy src/`
 - [ ] Manual test successful: [specific curl/command]
 - [ ] Error cases handled gracefully
 - [ ] Logs are informative but not verbose
-- [ ] Documentation updated if needed
+- [ ] README / docs updated
 
 ---
 
